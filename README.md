@@ -37,3 +37,25 @@ El sistema opera sobre un conjunto fijo de 5 dispositivos físicos de laboratori
 - **REQ-RES-06:** Se permite registrar reservas simultáneas en la misma ventana horaria siempre que pertenezcan a unidades distintas.
 - **REQ-RES-07:** Al cancelar una reserva, se actualiza el estado a `CANCELADA`, se preserva el ID en el registro y el intervalo queda disponible para nuevas consultas.
 - **REQ-RES-08:** Toda la información persistida en `data/reservas.json` se recupera intacta tras reiniciar la ejecución de la aplicación.
+
+## Sección 2: Solución
+
+### Estructura del Proyecto
+```text
+challenge-agents/
+├── data/
+│   ├── inventory.json       # Catálogo inmutable de los 5 equipos del laboratorio
+│   └── reservas.json        # Almacén persistente de reservas (activas y canceladas)
+├── src/
+│   ├── __init__.py
+│   ├── exceptions.py        # Excepciones personalizadas de dominio
+│   ├── models.py            # Modelos: Item, Reservation, ReservationStatus
+│   ├── repository.py        # Capa de persistencia atómica en archivo JSON
+│   └── service.py           # Reglas de negocio, disponibilidad y validaciones
+├── tests/
+│   ├── __init__.py
+│   └── test_reservas.py     # Suite de pruebas unitarias y de integración (pytest)
+├── AGENT.md                 # Configuración, contexto y directivas del agente
+├── README.md                # Especificación, solución y bitácora de delegación
+├── requirements.txt         # Dependencias del proyecto (pytest)
+└── .gitignore               # Exclusiones de Git
