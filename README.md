@@ -1,5 +1,9 @@
  # Laboratorio de Ensayos - Sistema Automatizado de Gestión de Turnos
 
+**Autor:** Julian Edgardo Mieres  
+
+---
+
 ## Sección 1: Especificación
 
 ### Contexto del Problema
@@ -59,10 +63,21 @@ challenge-agents/
 ├── README.md                # Especificación, solución y bitácora de delegación
 ├── requirements.txt         # Dependencias del proyecto (pytest)
 └── .gitignore               # Exclusiones de Git
+```
+
+
+
 
 #### Episodio 2: Capa de Persistencia y Regla de Cancelación sin Borrado
-- **Objetivo y Requisito:** Implementar el almacenamiento persistente en disco en formato JSON (`data/reservas.json`) y la lógica de negocio del servicio, garantizando la escritura atómica, la validación de intervalos semiabiertos y la anulación de reservas sin supresión del historial (Criterios REQ-RES-07 y REQ-RES-08)[cite: 1, 3].
-- **Contexto suministrado e instrucción:** Se solicitó al agente construir `ReservationRepository` en `src/repository.py` y `LaboratoryService` en `src/service.py` bajo las reglas de `AGENT.md`[cite: 2, 4]. Se requirieron métodos para consulta de disponibilidad, creación con UUID v4 y cancelación mediante mutación de estado[cite: 1].
-- **Acción del agente:** Generó el repositorio implementando guardado seguro mediante archivos temporales (`.tmp`) y reemplazo atómico (`os.replace`)[cite: 20], y construyó la clase `LaboratoryService` integrando las excepciones de dominio[cite: 21].
-- **Decisión humana (Revisión y Aceptación):** Se inspeccionó el diff confirmando que `_save` serializa fechas ISO 8601 legibles[cite: 20], que `get_active_by_item` filtra estrictamente por `ReservationStatus.ACTIVA`[cite: 20], y que `cancelar_reserva` actualiza el estado a `CANCELADA` persistiendo los cambios mediante `update()`, sin remover el objeto del registro histórico[cite: 1, 20].
+- **Objetivo y Requisito:** Implementar el almacenamiento persistente en disco en formato JSON (`data/reservas.json`) y la lógica de negocio del servicio, garantizando la escritura atómica, la validación de intervalos semiabiertos y la anulación de reservas sin supresión del historial (Criterios REQ-RES-07 y REQ-RES-08).
+- **Contexto suministrado e instrucción:** Se solicitó al agente construir `ReservationRepository` en `src/repository.py` y `LaboratoryService` en `src/service.py` bajo las reglas de `AGENT.md`. Se requirieron métodos para consulta de disponibilidad, creación con UUID v4 y cancelación mediante mutación de estado.
+- **Acción del agente:** Generó el repositorio implementando guardado seguro mediante archivos temporales (`.tmp`) y reemplazo atómico (`os.replace`), y construyó la clase `LaboratoryService` integrando las excepciones de dominio.
+- **Decisión humana (Revisión y Aceptación):** Se inspeccionó el diff confirmando que `_save` serializa fechas ISO 8601 legibles, que `get_active_by_item` filtra estrictamente por `ReservationStatus.ACTIVA`, y que `cancelar_reserva` actualiza el estado a `CANCELADA` persistiendo los cambios mediante `update()`, sin remover el objeto del registro histórico.
 - **Evidencia verificable:** Commit `feat: implementar repositorio JSON atomico y logica de reservas en service`.
+
+#### Episodio 3: Cobertura Integral de Pruebas y Comprobación de Reinicio
+- **Objetivo y Requisito:** Validar exhaustivamente las reglas de negocio y los criterios REQ-RES-01 a REQ-RES-08 mediante tests automáticos con pytest, comprobar la persistencia tras reinicio de proceso y proveer una interfaz CLI interactiva (`main.py`).
+- **Contexto suministrado e instrucción:** Se solicitó al agente implementar `tests/test_reservas.py` cubriendo cada criterio de aceptación y aislando cada prueba mediante fixtures con `tmp_path`, además de construir un menú de consola en `main.py` para operar el sistema
+- **Acción del agente:** Generó la suite con casos de prueba específicos mapeados de REQ-RES-01 a REQ-RES-08 (incluyendo límites consecutivos contiguos y reinicio con una segunda instancia de repositorio) y codificó la CLI en `main.py` con manejo limpio de excepciones de dominio.
+- **Decisión humana (Revisión y Aceptación):** Se inspeccionó el diff de `tests/test_reservas.py` validando que `test_req_res_08_persistencia_al_reiniciar_repository` creara un nuevo objeto `ReservationRepository` apuntando al archivo en disco para verificar la rehidratación real de datos sin depender de memoria residual.
+- **Evidencia verificable:** Commit `feat: implementar suite completa de pruebas pytest y CLI interactiva`.
