@@ -1,41 +1,39 @@
-# Laboratorio de Ensayos - Sistema Automatizado de GestiÛn de Turnos
+ # Laboratorio de Ensayos - Sistema Automatizado de Gesti√≥n de Turnos
 
-## SecciÛn 1: EspecificaciÛn
+## Secci√≥n 1: Especificaci√≥n
 
 ### Contexto del Problema
-La administraciÛn de los equipos de laboratorio se coordinaba histÛricamente mediante planillas compartidas y mensajerÌa directa[cite: 1]. Esta din·mica generÛ bloqueos indebidos de instrumentos debido a turnos dados de baja que nunca se liberaron formalmente, asÌ como superposiciones operativas entre solicitudes simult·neas para un mismo dispositivo fÌsico[cite: 1].
+La administraci√≥n de los equipos de laboratorio se coordinaba hist√≥ricamente mediante planillas compartidas y mensajer√≠a directa. Esta din√°mica gener√≥ bloqueos indebidos de instrumentos debido a turnos dados de baja que nunca se liberaron formalmente, as√≠ como superposiciones operativas entre solicitudes simult√°neas para un mismo dispositivo f√≠sico.
 
 ### Objetivo y Alcance
-Desarrollo de un sistema de control local en Python, verificable mediante pruebas autom·ticas, que garantiza la consulta de disponibilidad en tiempo real, la adjudicaciÛn de turnos sin solapamiento y la anulaciÛn controlada de reservas preservando el rastro histÛrico completo[cite: 1, 2, 3]. El estado del sistema se almacena en disco de manera persistente en formato JSON local (\data/reservas.json\)[cite: 1, 2].
+Desarrollo de un sistema de control local en Python, verificable mediante pruebas autom√°ticas, que garantiza la consulta de disponibilidad en tiempo real, la adjudicaci√≥n de turnos sin solapamiento y la anulaci√≥n controlada de reservas preservando el rastro hist√≥rico completo. El estado del sistema se almacena en disco de manera persistente en formato JSON local (`data/reservas.json`).
 
 ### Parque de Instrumentos (Inventario Base)
-El sistema opera sobre un conjunto fijo de 5 dispositivos fÌsicos de laboratorio preconfigurados[cite: 1]:
+El sistema opera sobre un conjunto fijo de 5 dispositivos f√≠sicos de laboratorio preconfigurados:
 
-| Identificador | DescripciÛn del Dispositivo |
+| Identificador | Descripci√≥n del Dispositivo |
 |---|---|
 | MIC-01 | Microscopio digital |
 | MIC-02 | Microscopio digital |
 | OSC-01 | Osciloscopio |
-| MUL-01 | MultÌmetro |
-| FUE-01 | Fuente de alimentaciÛn |
+| MUL-01 | Mult√≠metro |
+| FUE-01 | Fuente de alimentaci√≥n |
 
 ### Reglas de Negocio y Supuestos Operativos
-1. **Entidad de Reserva:** Cada registro almacena un identificador ˙nico (UUID v4), el cÛdigo del equipo (\item_id\), el nombre o legajo del solicitante (cadena no vacÌa ni formada ˙nicamente por espacios), fecha/hora de inicio, fecha/hora de cierre y el estado de la reserva (\ACTIVA\ o \CANCELADA\)[cite: 1].
-2. **DefiniciÛn de Intervalo Temporal:** Toda reserva activa se modela matem·ticamente como un intervalo semiabierto \[inicio, fin)\[cite: 1].
-3. **CondiciÛn de Conflicto (Solapamiento):** Dos reservas sobre el mismo dispositivo fÌsico colisionan si y solo si sus rangos se cruzan: \
-uevo_inicio < fin_existente\ y \
-uevo_fin > inicio_existente\[cite: 1].
-4. **Adyacencia Consecutiva:** Se admiten turnos contiguos en el mismo equipo sin margen muerto; una reserva que finaliza a las 11:00 permite el inicio de otra exactamente a las 11:00[cite: 1].
-5. **Concurrencia entre Equipos:** Dispositivos fÌsicos distintos (por ejemplo, MIC-01 y MIC-02) pueden reservarse en franjas idÈnticas sin ninguna clase de bloqueo[cite: 1].
-6. **PolÌticas de Fecha y Hora (Supuestos):** Se adopta el formato est·ndar ISO-8601 (\YYYY-MM-DDTHH:MM\)[cite: 2]. Para posibilitar la ejecuciÛn de pruebas unitarias deterministas y reproducibles en cualquier momento, el sistema no restringe de forma arbitraria fechas pasadas[cite: 2].
-7. **PolÌtica de CancelaciÛn:** La anulaciÛn de una reserva no elimina el registro; cambia su estado a \CANCELADA\, manteniendo sus metadatos e ID para trazabilidad histÛrica y liberando el rango horario para nuevas solicitudes[cite: 1].
+1. **Entidad de Reserva:** Cada registro almacena un identificador √∫nico (UUID v4), el c√≥digo del equipo (`item_id`), el nombre o legajo del solicitante (cadena no vac√≠a ni formada √∫nicamente por espacios), fecha/hora de inicio, fecha/hora de cierre y el estado de la reserva (`ACTIVA` o `CANCELADA`).
+2. **Definici√≥n de Intervalo Temporal:** Toda reserva activa se modela matem√°ticamente como un intervalo semiabierto `[inicio, fin)`.
+3. **Condici√≥n de Conflicto (Solapamiento):** Dos reservas sobre el mismo dispositivo f√≠sico colisionan si y solo si sus rangos se cruzan: `nuevo_inicio < fin_existente` y `nuevo_fin > inicio_existente`.
+4. **Adyacencia Consecutiva:** Se admiten turnos contiguos en el mismo equipo sin margen muerto; una reserva que finaliza a las 11:00 permite el inicio de otra exactamente a las 11:00.
+5. **Concurrencia entre Equipos:** Dispositivos f√≠sicos distintos (por ejemplo, MIC-01 y MIC-02) pueden reservarse en franjas id√©nticas sin ninguna clase de bloqueo.
+6. **Pol√≠ticas de Fecha y Hora (Supuestos):** Se adopta el formato est√°ndar ISO-8601 (`YYYY-MM-DDTHH:MM`). Para posibilitar la ejecuci√≥n de pruebas unitarias deterministas y reproducibles en cualquier momento, el sistema no restringe de forma arbitraria fechas pasadas.
+7. **Pol√≠tica de Cancelaci√≥n:** La anulaci√≥n de una reserva no elimina el registro; cambia su estado a `CANCELADA`, manteniendo sus metadatos e ID para trazabilidad hist√≥rica y liberando el rango horario para nuevas solicitudes.
 
-### Criterios de AceptaciÛn Verificables
-- **REQ-RES-01:** La creaciÛn de una reserva con equipo registrado, solicitante v·lido e \inicio < fin\ produce un registro con estado \ACTIVA\ y un identificador ˙nico persistido[cite: 1].
-- **REQ-RES-02:** El sistema rechaza cualquier solicitud con solicitante en blanco, compuesto solo por espacios o de tipo no admisible[cite: 1].
-- **REQ-RES-03:** El sistema rechaza rangos temporales anÛmalos donde \inicio >= fin\ o cadenas con formato de fecha ilegible[cite: 1].
-- **REQ-RES-04:** Se deniega cualquier reserva activa que colisione de forma total, parcial o envolvente con otra reserva activa preexistente para la misma unidad[cite: 1].
-- **REQ-RES-05:** Se aceptan reservas contiguas donde el inicio coincide con el fin de una reserva activa anterior en la misma unidad[cite: 1].
-- **REQ-RES-06:** Se permite registrar reservas simult·neas en la misma ventana horaria siempre que pertenezcan a unidades distintas[cite: 1].
-- **REQ-RES-07:** Al cancelar una reserva, se actualiza el estado a \CANCELADA\, se preserva el ID en el registro y el intervalo queda disponible para nuevas consultas[cite: 1].
-- **REQ-RES-08:** Toda la informaciÛn persistida en \data/reservas.json\ se recupera intacta tras reiniciar la ejecuciÛn de la aplicaciÛn[cite: 1, 2].
+### Criterios de Aceptaci√≥n Verificables
+- **REQ-RES-01:** La creaci√≥n de una reserva con equipo registrado, solicitante v√°lido e `inicio < fin` produce un registro con estado `ACTIVA` y un identificador √∫nico persistido.
+- **REQ-RES-02:** El sistema rechaza cualquier solicitud con solicitante en blanco, compuesto solo por espacios o de tipo no admisible.
+- **REQ-RES-03:** El sistema rechaza rangos temporales an√≥malos donde `inicio >= fin` o cadenas con formato de fecha ilegible.
+- **REQ-RES-04:** Se deniega cualquier reserva activa que colisione de forma total, parcial o envolvente con otra reserva activa preexistente para la misma unidad.
+- **REQ-RES-05:** Se aceptan reservas contiguas donde el inicio coincide con el fin de una reserva activa anterior en la misma unidad.
+- **REQ-RES-06:** Se permite registrar reservas simult√°neas en la misma ventana horaria siempre que pertenezcan a unidades distintas.
+- **REQ-RES-07:** Al cancelar una reserva, se actualiza el estado a `CANCELADA`, se preserva el ID en el registro y el intervalo queda disponible para nuevas consultas.
+- **REQ-RES-08:** Toda la informaci√≥n persistida en `data/reservas.json` se recupera intacta tras reiniciar la ejecuci√≥n de la aplicaci√≥n.
